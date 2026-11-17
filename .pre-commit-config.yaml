@@ -1,0 +1,48 @@
+# Pre-commit hooks: run locally before each commit, and re-run in CI.
+# Install once with: uv run pre-commit install
+# Run on everything with: uv run pre-commit run --all-files
+minimum_pre_commit_version: "3.5.0"
+
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  # --- Generic hygiene -----------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        # Plans, datasets and weights must go through DVC, never plain Git.
+        args: ["--maxkb=500"]
+      - id: detect-private-key
+
+  # --- Python lint + format (replaces black, isort, flake8) -----------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.4
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  # --- Keep uv.lock in sync with pyproject.toml ------------------------------
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.13.7
+    hooks:
+      - id: uv-lock
+
+  # --- Notebooks: never commit outputs (heavy diffs, may leak real plans) ----
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
+
+  # --- Commit message convention (Conventional Commits) ----------------------
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.19.3
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
